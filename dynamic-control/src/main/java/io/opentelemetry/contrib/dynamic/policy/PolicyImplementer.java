@@ -34,8 +34,7 @@ public interface PolicyImplementer {
   /**
    * Returns the validators that this implementer supports.
    *
-   * <p>These validators define which policy types and aliases the implementer can accept and
-   * process.
+   * <p>These validators define which policy types the implementer can accept and process.
    *
    * @return the list of supported validators
    */

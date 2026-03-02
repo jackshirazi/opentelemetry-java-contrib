@@ -53,7 +53,7 @@ public final class TraceSamplingRatePolicyImplementer implements PolicyImplement
   @Override
   public void onPoliciesChanged(List<TelemetryPolicy> policies) {
     for (TelemetryPolicy policy : policies) {
-      if (!TraceSamplingRatePolicy.TYPE.equals(policy.getType())) {
+      if (!TraceSamplingRatePolicy.policyType().equals(policy.getType())) {
         continue;
       }
       if (!(policy instanceof TraceSamplingRatePolicy)) {

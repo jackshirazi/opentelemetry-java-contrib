@@ -50,4 +50,25 @@ public class TelemetryPolicy {
   public String getType() {
     return type;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof TelemetryPolicy)) {
+      return false;
+    }
+    TelemetryPolicy that = (TelemetryPolicy) o;
+    return that.canEqual(this) && Objects.equals(type, that.type);
+  }
+
+  protected boolean canEqual(Object other) {
+    return other instanceof TelemetryPolicy;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type);
+  }
 }

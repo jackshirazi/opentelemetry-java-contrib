@@ -14,6 +14,8 @@ import io.opentelemetry.contrib.dynamic.policy.source.JsonSourceWrapper;
 import io.opentelemetry.contrib.dynamic.policy.source.KeyValueSourceWrapper;
 import io.opentelemetry.contrib.dynamic.policy.source.SourceFormat;
 import io.opentelemetry.contrib.dynamic.policy.source.SourceWrapper;
+import io.opentelemetry.contrib.dynamic.policy.tracesampling.TraceSamplingRatePolicy;
+import io.opentelemetry.contrib.dynamic.policy.tracesampling.TraceSamplingValidator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,7 +23,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class TraceSamplingValidatorTest {
 
-  private static final String TRACE_SAMPLING_POLICY_TYPE = "trace-sampling";
+  private static final String TRACE_SAMPLING_POLICY_TYPE = TraceSamplingRatePolicy.POLICY_TYPE;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final TraceSamplingValidator validator = new TraceSamplingValidator();
@@ -51,8 +53,17 @@ class TraceSamplingValidatorTest {
   }
 
   @Test
+  void testValidate_ValidJson_StringNumber() {
+    String json = "{\"" + TRACE_SAMPLING_POLICY_TYPE + "\": \"0.2\"}";
+    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSON, json));
+    assertThat(policy).isNotNull();
+    assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
+    assertThat(((TraceSamplingRatePolicy) policy).getProbability()).isCloseTo(0.2, within(1e-9));
+  }
+
+  @Test
   void testValidate_ValidJsonArraySource() {
-    String jsonArray = "[{\"other-policy\": 1.0}, {\"trace-sampling\": 0.5}]";
+    String jsonArray = "[{\"other-policy\": 1.0}, {\"" + TRACE_SAMPLING_POLICY_TYPE + "\": 0.5}]";
     List<SourceWrapper> wrappedSources = SourceFormat.JSON.parse(jsonArray);
     TelemetryPolicy policy = null;
     for (SourceWrapper source : wrappedSources) {

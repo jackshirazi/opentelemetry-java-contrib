@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.contrib.dynamic.policy;
+package io.opentelemetry.contrib.dynamic.policy.tracesampling;
 
-import io.opentelemetry.contrib.dynamic.sampler.DelegatingSampler;
+import io.opentelemetry.contrib.dynamic.policy.PolicyImplementer;
+import io.opentelemetry.contrib.dynamic.policy.PolicyValidator;
+import io.opentelemetry.contrib.dynamic.policy.TelemetryPolicy;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * Implements the {@code trace-sampling} policy by updating a {@link DelegatingSampler}.
@@ -29,6 +32,8 @@ import java.util.Objects;
  * with sampling operations on the associated {@link DelegatingSampler}.
  */
 public final class TraceSamplingRatePolicyImplementer implements PolicyImplementer {
+  private static final Logger logger =
+      Logger.getLogger(TraceSamplingRatePolicyImplementer.class.getName());
 
   private static final List<PolicyValidator> VALIDATORS =
       Collections.<PolicyValidator>singletonList(new TraceSamplingValidator());
@@ -53,17 +58,19 @@ public final class TraceSamplingRatePolicyImplementer implements PolicyImplement
   @Override
   public void onPoliciesChanged(List<TelemetryPolicy> policies) {
     for (TelemetryPolicy policy : policies) {
-      if (!TraceSamplingRatePolicy.policyType().equals(policy.getType())) {
+      if (!TraceSamplingRatePolicy.POLICY_TYPE.equals(policy.getType())) {
         continue;
       }
       if (!(policy instanceof TraceSamplingRatePolicy)) {
         // Type-only policy represents removing trace-sampling config.
-        delegatingSampler.setDelegate(Sampler.alwaysOn());
+        delegatingSampler.setDelegate(TraceSamplingRatePolicy.createSampler(1.0));
+        logger.info("Applied trace sampling policy reset: probability reset to 1.0");
         continue;
       }
       double ratio = ((TraceSamplingRatePolicy) policy).getProbability();
-      Sampler sampler = Sampler.parentBased(Sampler.traceIdRatioBased(ratio));
+      Sampler sampler = TraceSamplingRatePolicy.createSampler(ratio);
       delegatingSampler.setDelegate(sampler);
+      logger.info("Applied trace sampling policy update: probability=" + ratio);
     }
   }
 }

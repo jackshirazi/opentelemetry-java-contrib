@@ -8,6 +8,7 @@ package io.opentelemetry.contrib.dynamic.policy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.contrib.dynamic.policy.source.SourceWrapper;
+import io.opentelemetry.contrib.dynamic.policy.tracesampling.TraceSamplingRatePolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,7 +20,7 @@ class PolicyStoreTest {
   @Test
   void notifiesImplementerOnChangesAndRemovals() {
     PolicyStore store = new PolicyStore();
-    TestImplementer implementer = new TestImplementer(TraceSamplingRatePolicy.policyType());
+    TestImplementer implementer = new TestImplementer(TraceSamplingRatePolicy.POLICY_TYPE);
     store.registerImplementer(implementer);
     assertThat(implementer.notifications).isEmpty();
 
@@ -44,7 +45,7 @@ class PolicyStoreTest {
     assertThat(implementer.notifications).hasSize(3);
     assertThat(implementer.notifications.get(2)).hasSize(1);
     assertThat(implementer.notifications.get(2).get(0).getType())
-        .isEqualTo(TraceSamplingRatePolicy.policyType());
+        .isEqualTo(TraceSamplingRatePolicy.POLICY_TYPE);
     assertThat(implementer.notifications.get(2).get(0)).isExactlyInstanceOf(TelemetryPolicy.class);
   }
 

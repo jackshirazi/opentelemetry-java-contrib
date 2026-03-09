@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * <p>Implementers are notified only for the policy types they declare support for via {@link
  * PolicyImplementer#getValidators()}.
  */
-final class PolicyStore {
+public final class PolicyStore {
 
   private final AtomicReference<List<TelemetryPolicy>> current =
       new AtomicReference<>(Collections.unmodifiableList(new ArrayList<>()));
@@ -37,7 +37,7 @@ final class PolicyStore {
    *
    * @param newPolicies the full set of merged policies
    */
-  void updatePolicies(List<TelemetryPolicy> newPolicies) {
+  public void updatePolicies(List<TelemetryPolicy> newPolicies) {
     List<TelemetryPolicy> snapshot = Collections.unmodifiableList(new ArrayList<>(newPolicies));
     current.set(snapshot);
     for (PolicyImplementer implementer : implementers) {
@@ -50,7 +50,7 @@ final class PolicyStore {
    *
    * @param implementer the implementer to register
    */
-  void registerImplementer(PolicyImplementer implementer) {
+  public void registerImplementer(PolicyImplementer implementer) {
     implementers.add(implementer);
     List<TelemetryPolicy> policies =
         Objects.requireNonNull(current.get(), "current policy snapshot cannot be null");

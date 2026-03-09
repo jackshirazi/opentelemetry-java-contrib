@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
+import io.opentelemetry.contrib.dynamic.policy.tracesampling.TraceSamplingRatePolicy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -18,7 +19,7 @@ class TraceSamplingRatePolicyTest {
   @Test
   void constructorAcceptsValidProbability() {
     TraceSamplingRatePolicy policy = new TraceSamplingRatePolicy(0.5);
-    assertThat(policy.getType()).isEqualTo(TraceSamplingRatePolicy.policyType());
+    assertThat(policy.getType()).isEqualTo(TraceSamplingRatePolicy.POLICY_TYPE);
     assertThat(policy.getProbability()).isCloseTo(0.5, within(1e-9));
   }
 

@@ -5,8 +5,11 @@
 
 package io.opentelemetry.contrib.dynamic.policy.source;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.errorprone.annotations.Immutable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -24,6 +27,28 @@ public enum SourceFormat {
   }
 
   public String configValue() {
+    return configValue;
+  }
+
+  @JsonCreator
+  public static SourceFormat fromConfigValue(String value) {
+    if (value == null || value.trim().isEmpty()) {
+      throw new IllegalArgumentException("format cannot be null or empty");
+    }
+    String normalized = value.trim().toUpperCase(Locale.ROOT);
+    try {
+      return SourceFormat.valueOf(normalized);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+          "Unsupported source format '"
+              + value
+              + "'. Supported formats are: json, keyvalue.",
+          e);
+    }
+  }
+
+  @JsonValue
+  public String toConfigValue() {
     return configValue;
   }
 

@@ -222,7 +222,7 @@ public final class OpampPolicyProvider implements PolicyProvider {
   private void parsePolicyText(String key, String policyText, List<TelemetryPolicy> out) {
     logger.info("Received OpAMP policy payload for key '" + key + "': " + policyText);
     List<SourceWrapper> parsedSources = format.parse(policyText);
-    if (parsedSources == null && format == SourceFormat.JSON) {
+    if (parsedSources == null && format == SourceFormat.JSONKEYVALUE) {
       parsedSources = parseMappedJsonObject(policyText, sourceKeyToPolicyType.keySet());
     }
     if (parsedSources == null) {

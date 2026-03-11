@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 /** Supported source formats and their parser dispatch. */
 public enum SourceFormat {
   KEYVALUE("keyvalue", KeyValueSourceWrapper::parse),
-  JSON("json", JsonSourceWrapper::parse);
+  JSONKEYVALUE("jsonkeyvalue", JsonSourceWrapper::parse);
 
   private final String configValue;
   private final SourceParser parser;
@@ -42,7 +42,7 @@ public enum SourceFormat {
       throw new IllegalArgumentException(
           "Unsupported source format '"
               + value
-              + "'. Supported formats are: json, keyvalue.",
+              + "'. Supported formats are: jsonkeyvalue, keyvalue.",
           e);
     }
   }

@@ -25,7 +25,7 @@ public final class JsonSourceWrapper implements SourceWrapper {
 
   @Override
   public SourceFormat getFormat() {
-    return SourceFormat.JSON;
+    return SourceFormat.JSONKEYVALUE;
   }
 
   @Override

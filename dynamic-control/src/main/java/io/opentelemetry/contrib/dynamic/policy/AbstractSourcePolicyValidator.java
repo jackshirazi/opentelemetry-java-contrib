@@ -23,7 +23,7 @@ public abstract class AbstractSourcePolicyValidator implements PolicyValidator {
     }
     SourceFormat format = source.getFormat();
     switch (format) {
-      case JSON:
+      case JSONKEYVALUE:
         return validateJsonSource(((JsonSourceWrapper) source).asJsonNode());
       case KEYVALUE:
         return validateKeyValueSource((KeyValueSourceWrapper) source);

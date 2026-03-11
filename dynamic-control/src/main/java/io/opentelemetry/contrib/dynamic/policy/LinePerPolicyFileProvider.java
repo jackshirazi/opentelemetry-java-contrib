@@ -60,7 +60,7 @@ final class LinePerPolicyFileProvider implements PolicyProvider {
 
             SourceFormat format;
             if (trimmedLine.startsWith("{")) {
-              format = SourceFormat.JSON;
+              format = SourceFormat.JSONKEYVALUE;
             } else if (trimmedLine.indexOf('=') >= 0) {
               format = SourceFormat.KEYVALUE;
             } else {

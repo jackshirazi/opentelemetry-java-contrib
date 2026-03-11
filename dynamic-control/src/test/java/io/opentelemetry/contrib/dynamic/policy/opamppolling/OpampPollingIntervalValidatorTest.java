@@ -21,7 +21,9 @@ class OpampPollingIntervalValidatorTest {
   void validatesJsonSeconds() {
     TelemetryPolicy policy =
         validator.validate(
-            first(SourceFormat.JSON.parse("{\"" + OpampPollingIntervalPolicy.POLICY_TYPE + "\":2.5}")));
+            first(
+                SourceFormat.JSONKEYVALUE.parse(
+                    "{\"" + OpampPollingIntervalPolicy.POLICY_TYPE + "\":2.5}")));
 
     assertThat(policy).isInstanceOf(OpampPollingIntervalPolicy.class);
     assertThat(((OpampPollingIntervalPolicy) policy).getInterval()).isEqualTo(Duration.ofMillis(2500));
@@ -43,7 +45,9 @@ class OpampPollingIntervalValidatorTest {
   void rejectsZeroAndNegative() {
     TelemetryPolicy zero =
         validator.validate(
-            first(SourceFormat.JSON.parse("{\"" + OpampPollingIntervalPolicy.POLICY_TYPE + "\":0}")));
+            first(
+                SourceFormat.JSONKEYVALUE.parse(
+                    "{\"" + OpampPollingIntervalPolicy.POLICY_TYPE + "\":0}")));
     TelemetryPolicy negative =
         validator.validate(
             first(SourceFormat.KEYVALUE.parse(OpampPollingIntervalPolicy.POLICY_TYPE + "=-1")));

@@ -12,7 +12,7 @@ import java.util.Objects;
 
 /** Policy that enables/disables trace export dynamically. */
 public final class TraceExportEnabledPolicy extends TelemetryPolicy {
-  public static final String POLICY_TYPE = "TraceExportEnabledPolicy";
+  public static final String POLICY_TYPE = "trace_export_enabled_policy";
 
   private final boolean enabled;
 

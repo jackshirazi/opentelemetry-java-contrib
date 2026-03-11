@@ -113,7 +113,7 @@ class LinePerPolicyFileProviderTest {
         return null;
       }
       SourceFormat format = source.getFormat();
-      if (format == SourceFormat.JSON && !acceptJson) {
+      if (format == SourceFormat.JSONKEYVALUE && !acceptJson) {
         return null;
       }
       if (format == SourceFormat.KEYVALUE && !acceptKeyValue) {

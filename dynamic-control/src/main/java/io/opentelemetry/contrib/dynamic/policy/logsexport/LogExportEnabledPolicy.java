@@ -12,7 +12,7 @@ import java.util.Objects;
 
 /** Policy that enables/disables log export dynamically. */
 public final class LogExportEnabledPolicy extends TelemetryPolicy {
-  public static final String POLICY_TYPE = "LogExportEnabledPolicy";
+  public static final String POLICY_TYPE = "log_export_enabled_policy";
 
   private final boolean enabled;
 

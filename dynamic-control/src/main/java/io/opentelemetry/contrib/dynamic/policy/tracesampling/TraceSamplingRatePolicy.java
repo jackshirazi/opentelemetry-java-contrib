@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 public final class TraceSamplingRatePolicy extends TelemetryPolicy {
-  public static final String POLICY_TYPE = "TraceSamplingRatePolicy";
+  public static final String POLICY_TYPE = "trace_sampling_rate_policy";
   private static final AtomicReference<DelegatingSampler> INITIALIZED_SAMPLER =
       new AtomicReference<>();
 

@@ -28,7 +28,7 @@ class PolicyInitConfigReaderTest {
             + "  \"sources\": [\n"
             + "    {\n"
             + "      \"kind\": \"opamp\",\n"
-            + "      \"format\": \"json\",\n"
+            + "      \"format\": \"jsonkeyvalue\",\n"
             + "      \"location\": \"wss://opamp.example.com/v1\",\n"
             + "      \"mappings\": [\n"
             + "        { \"sourceKey\": \"sampling_rate\", \"policyType\": \"trace-sampling\" }\n"
@@ -50,7 +50,7 @@ class PolicyInitConfigReaderTest {
 
     assertThat(config.getSources()).hasSize(2);
     assertThat(config.getSources().get(0).getKind()).isEqualTo(SourceKind.OPAMP);
-    assertThat(config.getSources().get(0).getFormat()).isEqualTo(SourceFormat.JSON);
+    assertThat(config.getSources().get(0).getFormat()).isEqualTo(SourceFormat.JSONKEYVALUE);
     assertThat(config.getSources().get(0).getMappings()).hasSize(1);
     assertThat(config.getSources().get(0).getMappings().get(0).getSourceKey())
         .isEqualTo("sampling_rate");

@@ -36,7 +36,7 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_ValidJson() {
     String json = jsonForProbability(0.5);
-    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSON, json));
+    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSONKEYVALUE, json));
     assertThat(policy).isNotNull();
     assertThat(policy.getType()).isEqualTo(TRACE_SAMPLING_POLICY_TYPE);
     assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
@@ -46,7 +46,7 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_ValidJsonNodeSource() throws Exception {
     TelemetryPolicy policy =
-        validator.validate(wrap(SourceFormat.JSON, MAPPER.readTree(jsonForProbability(0.5))));
+        validator.validate(wrap(SourceFormat.JSONKEYVALUE, MAPPER.readTree(jsonForProbability(0.5))));
     assertThat(policy).isNotNull();
     assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
     assertThat(((TraceSamplingRatePolicy) policy).getProbability()).isCloseTo(0.5, within(1e-9));
@@ -55,7 +55,7 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_ValidJson_StringNumber() {
     String json = "{\"" + TRACE_SAMPLING_POLICY_TYPE + "\": \"0.2\"}";
-    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSON, json));
+    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSONKEYVALUE, json));
     assertThat(policy).isNotNull();
     assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
     assertThat(((TraceSamplingRatePolicy) policy).getProbability()).isCloseTo(0.2, within(1e-9));
@@ -64,7 +64,7 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_ValidJsonArraySource() {
     String jsonArray = "[{\"other-policy\": 1.0}, {\"" + TRACE_SAMPLING_POLICY_TYPE + "\": 0.5}]";
-    List<SourceWrapper> wrappedSources = SourceFormat.JSON.parse(jsonArray);
+    List<SourceWrapper> wrappedSources = SourceFormat.JSONKEYVALUE.parse(jsonArray);
     TelemetryPolicy policy = null;
     for (SourceWrapper source : wrappedSources) {
       policy = validator.validate(source);
@@ -81,7 +81,7 @@ class TraceSamplingValidatorTest {
   @ValueSource(doubles = {0.0, 1.0})
   void testValidate_ValidJson_BoundaryValues(double probability) {
     String json = jsonForProbability(probability);
-    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSON, json));
+    TelemetryPolicy policy = validator.validate(wrap(SourceFormat.JSONKEYVALUE, json));
     assertThat(policy).isNotNull();
     assertThat(policy.getType()).isEqualTo(TRACE_SAMPLING_POLICY_TYPE);
     assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
@@ -92,26 +92,26 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_InvalidJson_Malformed() {
     String json = "{invalid-json";
-    assertThat(validator.validate(wrap(SourceFormat.JSON, json))).isNull();
+    assertThat(validator.validate(wrap(SourceFormat.JSONKEYVALUE, json))).isNull();
   }
 
   @Test
   void testValidate_InvalidJson_MissingPolicyType() {
     String json = "{\"other-policy\": 0.5}";
-    assertThat(validator.validate(wrap(SourceFormat.JSON, json))).isNull();
+    assertThat(validator.validate(wrap(SourceFormat.JSONKEYVALUE, json))).isNull();
   }
 
   @Test
   void testValidate_InvalidJson_ValueNotNumber() {
     String json = "{\"" + TRACE_SAMPLING_POLICY_TYPE + "\": \"high\"}";
-    assertThat(validator.validate(wrap(SourceFormat.JSON, json))).isNull();
+    assertThat(validator.validate(wrap(SourceFormat.JSONKEYVALUE, json))).isNull();
   }
 
   @ParameterizedTest
   @ValueSource(doubles = {-0.1, 1.1})
   void testValidate_InvalidJson_ProbabilityOutOfRange(double probability) {
     String json = jsonForProbability(probability);
-    assertThat(validator.validate(wrap(SourceFormat.JSON, json))).isNull();
+    assertThat(validator.validate(wrap(SourceFormat.JSONKEYVALUE, json))).isNull();
   }
 
   @Test
@@ -187,9 +187,9 @@ class TraceSamplingValidatorTest {
   }
 
   private static SourceWrapper wrap(SourceFormat format, Object source) {
-    if (format == SourceFormat.JSON) {
+    if (format == SourceFormat.JSONKEYVALUE) {
       if (source instanceof String) {
-        return first(SourceFormat.JSON.parse((String) source));
+        return first(SourceFormat.JSONKEYVALUE.parse((String) source));
       }
       if (source instanceof JsonNode) {
         return new JsonSourceWrapper((JsonNode) source);

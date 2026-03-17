@@ -25,8 +25,8 @@ import java.util.stream.Stream;
  * <ul>
  *   <li><b>JSON Objects:</b> Lines starting with <code>{</code> are treated as JSON objects and
  *       validated against the registered {@link PolicyValidator}s.
- *   <li><b>Key-Value:</b> Lines containing <code>=</code> are treated as key-value policy lines
- *       and validated against the registered {@link PolicyValidator}s.
+ *   <li><b>Key-Value:</b> Lines containing <code>=</code> are treated as key-value policy lines and
+ *       validated against the registered {@link PolicyValidator}s.
  * </ul>
  *
  * <p>Empty lines and lines starting with <code>#</code> are ignored.

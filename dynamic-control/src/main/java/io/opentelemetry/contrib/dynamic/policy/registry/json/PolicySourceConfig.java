@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.contrib.dynamic.policy.registry;
+package io.opentelemetry.contrib.dynamic.policy.registry.json;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -98,11 +98,7 @@ public final class PolicySourceConfig {
     try {
       Path codeLocation =
           Paths.get(
-              PolicySourceConfig.class
-                  .getProtectionDomain()
-                  .getCodeSource()
-                  .getLocation()
-                  .toURI());
+              PolicySourceConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI());
       Path extensionDir = codeLocation.toFile().isFile() ? codeLocation.getParent() : codeLocation;
       if (extensionDir != null) {
         return extensionDir.resolve(FILE_DEFAULT_NAME).toAbsolutePath().normalize().toString();

@@ -75,11 +75,7 @@ class LinePerPolicyFileProviderTest {
   void fetchPoliciesSkipsUnknownOrRejectedPolicies() throws Exception {
     PolicyValidator rejectingValidator =
         new TestPolicyValidator(/* acceptJson= */ false, /* acceptKeyValue= */ false);
-    Path file =
-        writeLines(
-            "{\"trace-sampling\": 0.5}",
-            "{\"other-policy\": 0.5}",
-            "other.key=1");
+    Path file = writeLines("{\"trace-sampling\": 0.5}", "{\"other-policy\": 0.5}", "other.key=1");
     LinePerPolicyFileProvider provider =
         new LinePerPolicyFileProvider(file, Collections.singletonList(rejectingValidator));
 

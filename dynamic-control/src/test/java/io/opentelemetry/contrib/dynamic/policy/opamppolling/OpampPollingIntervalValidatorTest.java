@@ -26,19 +26,19 @@ class OpampPollingIntervalValidatorTest {
                     "{\"" + OpampPollingIntervalPolicy.POLICY_TYPE + "\":2.5}")));
 
     assertThat(policy).isInstanceOf(OpampPollingIntervalPolicy.class);
-    assertThat(((OpampPollingIntervalPolicy) policy).getInterval()).isEqualTo(Duration.ofMillis(2500));
+    assertThat(((OpampPollingIntervalPolicy) policy).getInterval())
+        .isEqualTo(Duration.ofMillis(2500));
   }
 
   @Test
   void validatesKeyValueSeconds() {
     TelemetryPolicy policy =
         validator.validate(
-            first(
-                SourceFormat.KEYVALUE.parse(
-                    OpampPollingIntervalPolicy.POLICY_TYPE + "=0.5")));
+            first(SourceFormat.KEYVALUE.parse(OpampPollingIntervalPolicy.POLICY_TYPE + "=0.5")));
 
     assertThat(policy).isInstanceOf(OpampPollingIntervalPolicy.class);
-    assertThat(((OpampPollingIntervalPolicy) policy).getInterval()).isEqualTo(Duration.ofMillis(500));
+    assertThat(((OpampPollingIntervalPolicy) policy).getInterval())
+        .isEqualTo(Duration.ofMillis(500));
   }
 
   @Test

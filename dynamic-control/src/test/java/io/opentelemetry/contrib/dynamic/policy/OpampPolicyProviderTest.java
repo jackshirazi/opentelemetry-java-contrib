@@ -30,7 +30,8 @@ class OpampPolicyProviderTest {
     ConfigProperties properties = mock(ConfigProperties.class);
     when(properties.getString("otel.opamp.service.url")).thenReturn("https://example.com/base");
 
-    assertThat(OpampPolicyProvider.getEndpoint(properties)).isEqualTo("https://example.com/base/v1/opamp");
+    assertThat(OpampPolicyProvider.getEndpoint(properties))
+        .isEqualTo("https://example.com/base/v1/opamp");
   }
 
   @Test
@@ -59,7 +60,8 @@ class OpampPolicyProviderTest {
     Map<String, String> semconvResourceAttributes = new HashMap<>();
     semconvResourceAttributes.put("deployment.environment.name", "prod");
     semconvResourceAttributes.put("deployment.environment", "legacy");
-    when(semconvProperties.getMap("otel.resource.attributes")).thenReturn(semconvResourceAttributes);
+    when(semconvProperties.getMap("otel.resource.attributes"))
+        .thenReturn(semconvResourceAttributes);
     assertThat(OpampPolicyProvider.getServiceEnvironment(semconvProperties)).isEqualTo("prod");
 
     ConfigProperties legacyProperties = mock(ConfigProperties.class);

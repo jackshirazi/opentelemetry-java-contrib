@@ -91,7 +91,7 @@ class PolicyRegistryOpampIntegrationTest {
               });
 
       ConfigProperties config = mock(ConfigProperties.class);
-      when(config.getString("otel.java.experimental.telemetry.policy.init"))
+      when(config.getString("otel.java.experimental.telemetry.policy.init.json"))
           .thenReturn(configPath.toString());
       when(config.getString("otel.opamp.service.url")).thenReturn(server.url("/").toString());
       when(config.getString("otel.service.name")).thenReturn("test-service");
@@ -119,7 +119,9 @@ class PolicyRegistryOpampIntegrationTest {
     AgentConfigFile configFile =
         new AgentConfigFile.Builder().body(ByteString.encodeUtf8(policyJson)).build();
     AgentConfigMap configMap =
-        new AgentConfigMap.Builder().config_map(Collections.singletonMap("bilbo", configFile)).build();
+        new AgentConfigMap.Builder()
+            .config_map(Collections.singletonMap("bilbo", configFile))
+            .build();
     AgentRemoteConfig remoteConfig = new AgentRemoteConfig.Builder().config(configMap).build();
     ServerToAgent response = new ServerToAgent.Builder().remote_config(remoteConfig).build();
 

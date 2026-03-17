@@ -46,7 +46,10 @@ public final class TraceSamplingValidator extends AbstractSourcePolicyValidator 
       return new TraceSamplingRatePolicy(probability);
     } catch (IllegalArgumentException e) {
       logger.info(
-          "Invalid trace-sampling probability '" + probability + "' will be ignored: " + e.getMessage());
+          "Invalid trace-sampling probability '"
+              + probability
+              + "' will be ignored: "
+              + e.getMessage());
       return null;
     }
   }

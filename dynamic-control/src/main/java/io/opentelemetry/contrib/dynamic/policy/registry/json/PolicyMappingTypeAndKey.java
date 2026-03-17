@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.contrib.dynamic.policy.registry;
+package io.opentelemetry.contrib.dynamic.policy.registry.json;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +33,8 @@ public final class PolicyMappingTypeAndKey {
     return configuredPolicyType;
   }
 
-  public void resolvePolicyTypeClass(Map<String, Class<? extends TelemetryPolicy>> registeredPolicyTypes) {
+  public void resolvePolicyTypeClass(
+      Map<String, Class<? extends TelemetryPolicy>> registeredPolicyTypes) {
     Objects.requireNonNull(registeredPolicyTypes, "registeredPolicyTypes cannot be null");
     this.policyType = registeredPolicyTypes.get(configuredPolicyType);
   }

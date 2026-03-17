@@ -8,18 +8,18 @@ package io.opentelemetry.contrib.dynamic.policy;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.opentelemetry.contrib.dynamic.policy.registry.PolicyMappingTypeAndKey;
 import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalPolicy;
-import io.opentelemetry.contrib.dynamic.policy.source.SourceFormat;
-import io.opentelemetry.contrib.dynamic.policy.source.KeyValueSourceWrapper;
+import io.opentelemetry.contrib.dynamic.policy.registry.json.PolicyMappingTypeAndKey;
 import io.opentelemetry.contrib.dynamic.policy.source.JsonSourceWrapper;
+import io.opentelemetry.contrib.dynamic.policy.source.KeyValueSourceWrapper;
+import io.opentelemetry.contrib.dynamic.policy.source.SourceFormat;
 import io.opentelemetry.contrib.dynamic.policy.source.SourceWrapper;
 import io.opentelemetry.opamp.client.OpampClient;
 import io.opentelemetry.opamp.client.OpampClientBuilder;
 import io.opentelemetry.opamp.client.internal.connectivity.http.OkHttpSender;
 import io.opentelemetry.opamp.client.internal.request.delay.PeriodicDelay;
-import io.opentelemetry.opamp.client.internal.response.MessageData;
 import io.opentelemetry.opamp.client.internal.request.service.HttpRequestService;
+import io.opentelemetry.opamp.client.internal.response.MessageData;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,13 +38,13 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okio.ByteString;
 import opamp.proto.AgentConfigFile;
 import opamp.proto.AgentConfigMap;
 import opamp.proto.AgentRemoteConfig;
 import opamp.proto.RemoteConfigStatus;
 import opamp.proto.RemoteConfigStatuses;
 import opamp.proto.ServerErrorResponse;
-import okio.ByteString;
 
 /** Policy provider backed by OpAMP remote config updates. */
 public final class OpampPolicyProvider implements PolicyProvider {
@@ -101,7 +101,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
     this.sourceKeyToPolicyType = Collections.unmodifiableMap(buildSourceKeyToPolicyType(mappings));
     this.pollingDelay =
         new MutablePeriodicDelay(
-            Objects.requireNonNull(GLOBAL_POLLING_INTERVAL.get(), "polling interval cannot be null"));
+            Objects.requireNonNull(
+                GLOBAL_POLLING_INTERVAL.get(), "polling interval cannot be null"));
   }
 
   @Override
@@ -146,31 +147,31 @@ public final class OpampPolicyProvider implements PolicyProvider {
     OpampClient client =
         builder.build(
             new OpampClient.Callbacks() {
-                  @Override
-                  public void onConnect(OpampClient client) {}
+              @Override
+              public void onConnect(OpampClient client) {}
 
-                  @Override
-                  public void onConnectFailed(OpampClient client, @Nullable Throwable throwable) {
-                    if (throwable == null) {
-                      logger.info("OpAMP connection failed");
-                    } else {
-                      logger.info("OpAMP connection failed: " + throwable.getMessage());
-                    }
-                  }
+              @Override
+              public void onConnectFailed(OpampClient client, @Nullable Throwable throwable) {
+                if (throwable == null) {
+                  logger.info("OpAMP connection failed");
+                } else {
+                  logger.info("OpAMP connection failed: " + throwable.getMessage());
+                }
+              }
 
-                  @Override
-                  public void onErrorResponse(OpampClient client, ServerErrorResponse errorResponse) {
-                    logger.info("OpAMP server error: " + errorResponse.error_message);
-                  }
+              @Override
+              public void onErrorResponse(OpampClient client, ServerErrorResponse errorResponse) {
+                logger.info("OpAMP server error: " + errorResponse.error_message);
+              }
 
-                  @Override
-                  public void onMessage(OpampClient client, MessageData messageData) {
-                    RemoteConfigStatus status = handleMessage(messageData, onUpdate);
-                    if (status != null) {
-                      client.setRemoteConfigStatus(status);
-                    }
-                  }
-                });
+              @Override
+              public void onMessage(OpampClient client, MessageData messageData) {
+                RemoteConfigStatus status = handleMessage(messageData, onUpdate);
+                if (status != null) {
+                  client.setRemoteConfigStatus(status);
+                }
+              }
+            });
 
     if (!clientRef.compareAndSet(null, client)) {
       safeClose(client);
@@ -196,7 +197,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
       List<TelemetryPolicy> empty = Collections.emptyList();
       currentPolicies.set(empty);
       onUpdate.accept(empty);
-      return buildStatus(RemoteConfigStatuses.RemoteConfigStatuses_FAILED, remoteConfig.config_hash);
+      return buildStatus(
+          RemoteConfigStatuses.RemoteConfigStatuses_FAILED, remoteConfig.config_hash);
     }
     AgentConfigFile selected = configMap.config_map.get(location);
     if (selected == null || selected.body == null) {
@@ -204,7 +206,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
       List<TelemetryPolicy> empty = Collections.emptyList();
       currentPolicies.set(empty);
       onUpdate.accept(empty);
-      return buildStatus(RemoteConfigStatuses.RemoteConfigStatuses_FAILED, remoteConfig.config_hash);
+      return buildStatus(
+          RemoteConfigStatuses.RemoteConfigStatuses_FAILED, remoteConfig.config_hash);
     }
 
     List<TelemetryPolicy> policies = new ArrayList<>();
@@ -380,7 +383,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
     }
   }
 
-  private static Map<String, String> buildSourceKeyToPolicyType(List<PolicyMappingTypeAndKey> mappings) {
+  private static Map<String, String> buildSourceKeyToPolicyType(
+      List<PolicyMappingTypeAndKey> mappings) {
     Map<String, String> mapping = new HashMap<>();
     for (PolicyMappingTypeAndKey item : mappings) {
       mapping.put(item.getSourceKey(), item.getConfiguredPolicyType());
@@ -389,7 +393,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
   }
 
   @Nullable
-  private static SourceWrapper remapSourcePolicyType(SourceWrapper source, String mappedPolicyType) {
+  private static SourceWrapper remapSourcePolicyType(
+      SourceWrapper source, String mappedPolicyType) {
     if (source instanceof JsonSourceWrapper) {
       JsonNode node = ((JsonSourceWrapper) source).asJsonNode();
       if (!node.isObject() || node.size() != 1) {
@@ -407,7 +412,8 @@ public final class OpampPolicyProvider implements PolicyProvider {
     return source;
   }
 
-  private static RemoteConfigStatus buildStatus(RemoteConfigStatuses status, @Nullable ByteString hash) {
+  private static RemoteConfigStatus buildStatus(
+      RemoteConfigStatuses status, @Nullable ByteString hash) {
     if (hash != null && status == RemoteConfigStatuses.RemoteConfigStatuses_APPLIED) {
       return new RemoteConfigStatus.Builder().status(status).last_remote_config_hash(hash).build();
     }

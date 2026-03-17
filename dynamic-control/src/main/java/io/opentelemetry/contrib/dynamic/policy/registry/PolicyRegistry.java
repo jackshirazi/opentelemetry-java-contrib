@@ -9,11 +9,8 @@ import io.opentelemetry.contrib.dynamic.policy.OpampPolicyProvider;
 import io.opentelemetry.contrib.dynamic.policy.PolicyImplementer;
 import io.opentelemetry.contrib.dynamic.policy.PolicyProvider;
 import io.opentelemetry.contrib.dynamic.policy.PolicyStore;
-import io.opentelemetry.contrib.dynamic.policy.TelemetryPolicy;
 import io.opentelemetry.contrib.dynamic.policy.PolicyValidator;
-import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalPolicy;
-import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalPolicyImplementer;
-import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalValidator;
+import io.opentelemetry.contrib.dynamic.policy.TelemetryPolicy;
 import io.opentelemetry.contrib.dynamic.policy.logsexport.DelegatingLogRecordExporter;
 import io.opentelemetry.contrib.dynamic.policy.logsexport.LogExportEnabledPolicy;
 import io.opentelemetry.contrib.dynamic.policy.logsexport.LogExportEnabledPolicyImplementer;
@@ -22,6 +19,12 @@ import io.opentelemetry.contrib.dynamic.policy.metricsexport.DelegatingMetricExp
 import io.opentelemetry.contrib.dynamic.policy.metricsexport.MetricExportEnabledPolicy;
 import io.opentelemetry.contrib.dynamic.policy.metricsexport.MetricExportEnabledPolicyImplementer;
 import io.opentelemetry.contrib.dynamic.policy.metricsexport.MetricExportEnabledValidator;
+import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalPolicy;
+import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalPolicyImplementer;
+import io.opentelemetry.contrib.dynamic.policy.opamppolling.OpampPollingIntervalValidator;
+import io.opentelemetry.contrib.dynamic.policy.registry.json.PolicyInitConfig;
+import io.opentelemetry.contrib.dynamic.policy.registry.json.PolicyMappingTypeAndKey;
+import io.opentelemetry.contrib.dynamic.policy.registry.json.PolicySourceConfig;
 import io.opentelemetry.contrib.dynamic.policy.source.SourceKind;
 import io.opentelemetry.contrib.dynamic.policy.traceexport.DelegatingSpanExporter;
 import io.opentelemetry.contrib.dynamic.policy.traceexport.TraceExportEnabledPolicy;
@@ -58,8 +61,10 @@ import javax.annotation.Nullable;
 
 /** Initializes policy registry/config wiring from auto-configuration. */
 public final class PolicyRegistry {
-  private static final String POLICY_INIT_CONFIG_PROPERTY =
-      "otel.java.experimental.telemetry.policy.init";
+  private static final String POLICY_INIT_CONFIG_PROPERTY_JSON =
+      "otel.java.experimental.telemetry.policy.init.json";
+  private static final String POLICY_INIT_CONFIG_PROPERTY_YAML =
+      "otel.java.experimental.telemetry.policy.init.yaml";
   private static final Map<String, Class<? extends TelemetryPolicy>> REGISTERED_POLICY_TYPES =
       new ConcurrentHashMap<>();
   private static final Map<Class<? extends TelemetryPolicy>, Supplier<PolicyValidator>>
@@ -67,7 +72,12 @@ public final class PolicyRegistry {
   private static final Map<Class<? extends TelemetryPolicy>, ImplementerFactory>
       IMPLEMENTER_FACTORIES = createImplementerFactories();
   private static final Logger logger = Logger.getLogger(PolicyRegistry.class.getName());
-  private static final PolicyInitConfigReader configReader = new PolicyInitConfigReader();
+  private static final io.opentelemetry.contrib.dynamic.policy.registry.json.PolicyInitConfigReader
+      jsonConfigReader =
+          new io.opentelemetry.contrib.dynamic.policy.registry.json.PolicyInitConfigReader();
+  private static final io.opentelemetry.contrib.dynamic.policy.registry.yaml.PolicyInitConfigReader
+      yamlConfigReader =
+          new io.opentelemetry.contrib.dynamic.policy.registry.yaml.PolicyInitConfigReader();
   private static final AtomicBoolean sourcesActivated = new AtomicBoolean(false);
   private static final Set<Class<? extends TelemetryPolicy>> registeredImplementers =
       ConcurrentHashMap.newKeySet();
@@ -95,7 +105,8 @@ public final class PolicyRegistry {
       String policyType, Class<? extends TelemetryPolicy> policyClass) {
     Objects.requireNonNull(policyType, "policyType cannot be null");
     Objects.requireNonNull(policyClass, "policyClass cannot be null");
-    Class<? extends TelemetryPolicy> existing = REGISTERED_POLICY_TYPES.put(policyType, policyClass);
+    Class<? extends TelemetryPolicy> existing =
+        REGISTERED_POLICY_TYPES.put(policyType, policyClass);
     if (existing != null && !existing.equals(policyClass)) {
       throw new IllegalStateException(
           "Policy type '" + policyType + "' is already registered by " + existing.getName());
@@ -105,12 +116,23 @@ public final class PolicyRegistry {
   public static void init(AutoConfigurationCustomizer autoConfiguration) {
     autoConfiguration.addPropertiesCustomizer(
         config -> {
-          String mappingPath = config.getString(POLICY_INIT_CONFIG_PROPERTY);
+          String mappingPathYaml = config.getString(POLICY_INIT_CONFIG_PROPERTY_YAML);
+          String mappingPathJson = config.getString(POLICY_INIT_CONFIG_PROPERTY_JSON);
+
+          String mappingPath =
+              mappingPathYaml != null && !mappingPathYaml.trim().isEmpty()
+                  ? mappingPathYaml
+                  : mappingPathJson;
+
           if (mappingPath == null || mappingPath.trim().isEmpty()) {
             return Collections.emptyMap();
           }
           try {
-            PolicyInitConfig initConfig = configReader.read(Paths.get(mappingPath));
+            boolean isYaml = mappingPathYaml != null && !mappingPathYaml.trim().isEmpty();
+            PolicyInitConfig initConfig =
+                isYaml
+                    ? yamlConfigReader.read(Paths.get(mappingPath))
+                    : jsonConfigReader.read(Paths.get(mappingPath));
             logger.log(
                 Level.INFO,
                 "Loaded telemetry policy init config with {0} source definitions from {1}",
@@ -167,8 +189,7 @@ public final class PolicyRegistry {
       Class<? extends TelemetryPolicy> policyClass, AutoConfigurationCustomizer autoConfiguration) {
     Method initializeMethod;
     try {
-      initializeMethod =
-          policyClass.getMethod("initialize", AutoConfigurationCustomizer.class);
+      initializeMethod = policyClass.getMethod("initialize", AutoConfigurationCustomizer.class);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           "No static initialize(AutoConfigurationCustomizer) method found for policy class '"
@@ -187,8 +208,7 @@ public final class PolicyRegistry {
       initializeMethod.invoke(null, autoConfiguration);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException(
-          "Cannot access initializer for policy class '" + policyClass.getName() + "'",
-          e);
+          "Cannot access initializer for policy class '" + policyClass.getName() + "'", e);
     } catch (InvocationTargetException e) {
       throw new IllegalStateException(
           "Policy initializer failed for class '" + policyClass.getName() + "'",
@@ -236,7 +256,8 @@ public final class PolicyRegistry {
   }
 
   @Nullable
-  private static PolicyProvider createOpampProvider(PolicySourceConfig source, ConfigProperties config) {
+  private static PolicyProvider createOpampProvider(
+      PolicySourceConfig source, ConfigProperties config) {
     Set<Class<? extends TelemetryPolicy>> mappedClasses =
         collectMappedPolicyClasses(source.getMappings());
     ArrayList<PolicyValidator> validators = new ArrayList<>();
@@ -257,7 +278,8 @@ public final class PolicyRegistry {
         config, source.getResolvedLocation(), source.getFormat(), source.getMappings(), validators);
   }
 
-  private static void registerImplementers(Set<Class<? extends TelemetryPolicy>> mappedPolicyClasses) {
+  private static void registerImplementers(
+      Set<Class<? extends TelemetryPolicy>> mappedPolicyClasses) {
     for (Class<? extends TelemetryPolicy> policyClass : mappedPolicyClasses) {
       ImplementerFactory factory = IMPLEMENTER_FACTORIES.get(policyClass);
       if (factory == null) {
@@ -330,7 +352,8 @@ public final class PolicyRegistry {
 
   private static Map<Class<? extends TelemetryPolicy>, Supplier<PolicyValidator>>
       createValidatorFactories() {
-    HashMap<Class<? extends TelemetryPolicy>, Supplier<PolicyValidator>> factories = new HashMap<>();
+    HashMap<Class<? extends TelemetryPolicy>, Supplier<PolicyValidator>> factories =
+        new HashMap<>();
     factories.put(TraceSamplingRatePolicy.class, TraceSamplingValidator::new);
     factories.put(TraceExportEnabledPolicy.class, TraceExportEnabledValidator::new);
     factories.put(MetricExportEnabledPolicy.class, MetricExportEnabledValidator::new);

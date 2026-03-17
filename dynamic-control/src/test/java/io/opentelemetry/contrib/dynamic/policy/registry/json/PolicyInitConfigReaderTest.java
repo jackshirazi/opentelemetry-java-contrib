@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.contrib.dynamic.policy.registry;
+package io.opentelemetry.contrib.dynamic.policy.registry.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,7 +56,8 @@ class PolicyInitConfigReaderTest {
         .isEqualTo("sampling_rate");
     assertThat(config.getSources().get(0).getMappings().get(0).getConfiguredPolicyType())
         .isEqualTo("trace-sampling");
-    assertThat(config.getSources().get(0).getConfiguredLocation()).isEqualTo("wss://opamp.example.com/v1");
+    assertThat(config.getSources().get(0).getConfiguredLocation())
+        .isEqualTo("wss://opamp.example.com/v1");
     assertThat(config.getSources().get(0).getResolvedLocation())
         .isEqualTo("wss://opamp.example.com/v1");
     assertThat(config.getSources().get(1).getConfiguredLocation()).isEqualTo("DEFAULT");

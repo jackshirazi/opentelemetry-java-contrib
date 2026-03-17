@@ -46,7 +46,8 @@ class TraceSamplingValidatorTest {
   @Test
   void testValidate_ValidJsonNodeSource() throws Exception {
     TelemetryPolicy policy =
-        validator.validate(wrap(SourceFormat.JSONKEYVALUE, MAPPER.readTree(jsonForProbability(0.5))));
+        validator.validate(
+            wrap(SourceFormat.JSONKEYVALUE, MAPPER.readTree(jsonForProbability(0.5))));
     assertThat(policy).isNotNull();
     assertThat(policy).isInstanceOf(TraceSamplingRatePolicy.class);
     assertThat(((TraceSamplingRatePolicy) policy).getProbability()).isCloseTo(0.5, within(1e-9));

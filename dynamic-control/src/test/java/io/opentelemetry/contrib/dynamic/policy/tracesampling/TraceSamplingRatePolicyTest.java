@@ -19,16 +19,18 @@ class TraceSamplingRatePolicyTest {
 
   @Test
   void constructorStoresProbabilityAndType() {
-    TraceSamplingRatePolicy policy = new TraceSamplingRatePolicy(0.25);
+    TraceSamplingRatePolicy policy = tracePolicy(0.25);
 
+    assertThat(policy.getIdentity().getId()).isEqualTo("trace-policy");
+    assertThat(policy.getIdentity().getName()).isEqualTo("Trace policy");
     assertThat(policy.getProbability()).isEqualTo(0.25);
     assertThat(policy.getType()).isEqualTo(TraceSamplingRatePolicy.POLICY_TYPE);
   }
 
   @Test
   void constructorNormalizesNegativeZeroToPositiveZero() {
-    TraceSamplingRatePolicy negativeZero = new TraceSamplingRatePolicy(-0.0);
-    TraceSamplingRatePolicy positiveZero = new TraceSamplingRatePolicy(0.0);
+    TraceSamplingRatePolicy negativeZero = tracePolicy(-0.0);
+    TraceSamplingRatePolicy positiveZero = tracePolicy(0.0);
 
     assertThat(negativeZero.getProbability()).isEqualTo(0.0);
     assertThat(Double.doubleToRawLongBits(negativeZero.getProbability()))
@@ -39,28 +41,36 @@ class TraceSamplingRatePolicyTest {
 
   @Test
   void constructorRejectsOutOfRangeOrNaNProbabilities() {
-    assertThatThrownBy(() -> new TraceSamplingRatePolicy(Double.NaN))
+    assertThatThrownBy(() -> tracePolicy(Double.NaN))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("probability must be within [0.0, 1.0]");
-    assertThatThrownBy(() -> new TraceSamplingRatePolicy(-0.001))
+    assertThatThrownBy(() -> tracePolicy(-0.001))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("probability must be within [0.0, 1.0]");
-    assertThatThrownBy(() -> new TraceSamplingRatePolicy(1.001))
+    assertThatThrownBy(() -> tracePolicy(1.001))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("probability must be within [0.0, 1.0]");
   }
 
   @Test
   void equalsAndHashCodeUseProbability() {
-    TraceSamplingRatePolicy a = new TraceSamplingRatePolicy(0.5);
-    TraceSamplingRatePolicy b = new TraceSamplingRatePolicy(0.5);
-    TraceSamplingRatePolicy c = new TraceSamplingRatePolicy(0.75);
+    TraceSamplingRatePolicy a = tracePolicy(0.5);
+    TraceSamplingRatePolicy b = tracePolicy(0.5);
+    TraceSamplingRatePolicy c = tracePolicy(0.75);
 
     assertThat(a).isEqualTo(b);
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
     assertThat(a).isNotEqualTo(c);
     assertThat(a).isNotEqualTo(null);
     assertThat(a).isNotEqualTo("not-a-policy");
+  }
+
+  @Test
+  void equalsAndHashCodeUseIdentity() {
+    TraceSamplingRatePolicy a = new TraceSamplingRatePolicy("trace-a", "Trace A", 0.5);
+    TraceSamplingRatePolicy b = new TraceSamplingRatePolicy("trace-b", "Trace B", 0.5);
+
+    assertThat(a).isNotEqualTo(b);
   }
 
   @Test
@@ -102,5 +112,9 @@ class TraceSamplingRatePolicyTest {
     assertThatThrownBy(() -> TraceSamplingRatePolicy.createSampler(1.01))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("probability must be within [0.0, 1.0]");
+  }
+
+  private static TraceSamplingRatePolicy tracePolicy(double probability) {
+    return new TraceSamplingRatePolicy("trace-policy", "Trace policy", probability);
   }
 }

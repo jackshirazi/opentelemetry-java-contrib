@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -45,6 +46,9 @@ class LinePerPolicyFileProviderTest {
     List<TelemetryPolicy> policies = provider.fetchPolicies();
 
     assertThat(policies).hasSize(1);
+    assertThat(policies.get(0).isDeleted()).isFalse();
+    assertThat(policies.get(0).getIdentity().getId()).isEqualTo("test-policy");
+    assertThat(policies.get(0).getIdentity().getName()).isEqualTo("Test policy");
     assertThat(policies.get(0).getType()).isEqualTo(TRACE_SAMPLING_TYPE);
   }
 
@@ -57,6 +61,9 @@ class LinePerPolicyFileProviderTest {
     List<TelemetryPolicy> policies = provider.fetchPolicies();
 
     assertThat(policies).hasSize(1);
+    assertThat(policies.get(0).isDeleted()).isFalse();
+    assertThat(policies.get(0).getIdentity().getId()).isEqualTo("test-policy");
+    assertThat(policies.get(0).getIdentity().getName()).isEqualTo("Test policy");
     assertThat(policies.get(0).getType()).isEqualTo(TRACE_SAMPLING_TYPE);
   }
 
@@ -69,6 +76,7 @@ class LinePerPolicyFileProviderTest {
     List<TelemetryPolicy> policies = provider.fetchPolicies();
 
     assertThat(policies).hasSize(1);
+    assertThat(policies.get(0).isDeleted()).isFalse();
     assertThat(policies.get(0).getType()).isEqualTo(TRACE_SAMPLING_TYPE);
   }
 
@@ -115,15 +123,56 @@ class LinePerPolicyFileProviderTest {
         if (!acceptJson) {
           return null;
         }
-        return new TelemetryPolicy(TRACE_SAMPLING_TYPE);
+        return testPolicy();
       }
       if (source.getFormat() == SourceFormat.KEYVALUE) {
         if (!acceptKeyValue) {
           return null;
         }
-        return new TelemetryPolicy(TRACE_SAMPLING_TYPE);
+        return testPolicy();
       }
       return null;
+    }
+
+    private static TelemetryPolicy testPolicy() {
+      return new TestTelemetryPolicy("test-policy", "Test policy", TRACE_SAMPLING_TYPE);
+    }
+  }
+
+  private static final class TestTelemetryPolicy implements TelemetryPolicy {
+    private final TelemetryPolicyIdentity identity;
+    private final String type;
+
+    private TestTelemetryPolicy(String id, String name, String type) {
+      this.identity = new TelemetryPolicyIdentity(id, name);
+      this.type = type;
+    }
+
+    @Override
+    public TelemetryPolicyIdentity getIdentity() {
+      return identity;
+    }
+
+    @Override
+    public String getType() {
+      return type;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (!(obj instanceof TestTelemetryPolicy)) {
+        return false;
+      }
+      TestTelemetryPolicy that = (TestTelemetryPolicy) obj;
+      return identity.equals(that.identity) && type.equals(that.type);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(identity, type);
     }
   }
 }

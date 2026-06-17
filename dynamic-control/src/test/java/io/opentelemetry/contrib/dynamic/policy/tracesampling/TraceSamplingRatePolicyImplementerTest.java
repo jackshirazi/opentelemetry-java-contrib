@@ -11,7 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.contrib.dynamic.policy.DeletedTelemetryPolicy;
 import io.opentelemetry.contrib.dynamic.policy.TelemetryPolicy;
+import io.opentelemetry.contrib.dynamic.policy.TelemetryPolicyIdentity;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingDecision;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
@@ -23,13 +25,16 @@ import org.junit.jupiter.api.Test;
 class TraceSamplingRatePolicyImplementerTest {
 
   @Test
-  void typeOnlyTraceSamplingPolicyFallsBackToAlwaysOn() {
+  void deletedTraceSamplingPolicyFallsBackToAlwaysOn() {
     DelegatingSampler delegatingSampler = new DelegatingSampler(Sampler.alwaysOff());
     TraceSamplingRatePolicyImplementer implementer =
         new TraceSamplingRatePolicyImplementer(delegatingSampler);
 
     implementer.onPoliciesChanged(
-        singletonList(new TelemetryPolicy(TraceSamplingRatePolicy.POLICY_TYPE)));
+        singletonList(
+            new DeletedTelemetryPolicy(
+                new TelemetryPolicyIdentity("trace-policy", "Trace policy"),
+                TraceSamplingRatePolicy.POLICY_TYPE)));
 
     assertThat(decisionFor(delegatingSampler)).isEqualTo(SamplingDecision.RECORD_AND_SAMPLE);
   }
@@ -40,7 +45,7 @@ class TraceSamplingRatePolicyImplementerTest {
     TraceSamplingRatePolicyImplementer implementer =
         new TraceSamplingRatePolicyImplementer(delegatingSampler);
 
-    implementer.onPoliciesChanged(singletonList(new TraceSamplingRatePolicy(1.0)));
+    implementer.onPoliciesChanged(singletonList(tracePolicy(1.0)));
 
     assertThat(decisionFor(delegatingSampler)).isEqualTo(SamplingDecision.RECORD_AND_SAMPLE);
   }
@@ -51,7 +56,10 @@ class TraceSamplingRatePolicyImplementerTest {
     TraceSamplingRatePolicyImplementer implementer =
         new TraceSamplingRatePolicyImplementer(delegatingSampler);
 
-    implementer.onPoliciesChanged(singletonList(new TelemetryPolicy("other-policy")));
+    implementer.onPoliciesChanged(
+        singletonList(
+            new DeletedTelemetryPolicy(
+                new TelemetryPolicyIdentity("other-policy", "Other policy"), "other-policy")));
 
     assertThat(decisionFor(delegatingSampler)).isEqualTo(SamplingDecision.DROP);
   }
@@ -63,7 +71,7 @@ class TraceSamplingRatePolicyImplementerTest {
         new TraceSamplingRatePolicyImplementer(delegatingSampler);
 
     List<TelemetryPolicy> policies =
-        Arrays.asList(new TraceSamplingRatePolicy(0.0), new TraceSamplingRatePolicy(1.0));
+        Arrays.asList(tracePolicyWithId("trace-1", 0.0), tracePolicyWithId("trace-2", 1.0));
 
     implementer.onPoliciesChanged(policies);
 
@@ -80,5 +88,13 @@ class TraceSamplingRatePolicyImplementerTest {
             Attributes.empty(),
             Collections.emptyList());
     return result.getDecision();
+  }
+
+  private static TraceSamplingRatePolicy tracePolicy(double probability) {
+    return tracePolicyWithId("trace-policy", probability);
+  }
+
+  private static TraceSamplingRatePolicy tracePolicyWithId(String id, double probability) {
+    return new TraceSamplingRatePolicy(id, "Trace policy " + id, probability);
   }
 }
